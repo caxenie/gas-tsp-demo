@@ -438,6 +438,9 @@ int main(int argc, char* argv[]){
 
     printf("\n Best fitness: %lf\n\n", p->c[POPULATION_SIZE].fitness);
     printf("\nSimulation ended.\n\n");
+    free(p);
+    free(newp);
+    free(dataset);
     return EXIT_SUCCESS;
 }
 
