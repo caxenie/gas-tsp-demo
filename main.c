@@ -85,7 +85,7 @@ int* shuffle_chromosome(int *data, int n)
     int* ret = (int*)calloc(n, sizeof(int));
     if (n > 1) {
         for (int i = 0; i < n - 1; i++) {
-            int j = i + (rand() + rand_seed) / (RAND_MAX / (n - i) + 1);
+            int j = i + 1 + (rand() + rand_seed) % (n - i - 1);
             int t = data[j];
             data[j] = data[i];
             data[i] = t;
