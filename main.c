@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <errno.h>
 #include <time.h>
 #include <float.h>
 
@@ -375,7 +376,13 @@ void report_state(struct population *p)
 }
 
 /* get the input data and store it locally for the population initialization */
-void get_input_dataset(){
+void get_input_dataset(char *  filename) {
+     FILE *fp = fopen(filename, "r");
+     if (fp == NULL){
+          printf("Fail to open file %s, %s.\n", filename, strerror(errno));
+          return;
+     }
+    printf("Open file %s OK.\n", filename);
     int id = 0, x = 0, y = 0;
     int input_idx = 0;
 
@@ -384,7 +391,7 @@ void get_input_dataset(){
         dataset[i] = (int *)calloc(3, sizeof(int));
     }
     /* loop and get training data */
-    while(scanf("%d,%d,%d\n", &id, &x, &y)>0){
+    while (fscanf(fp,"%d,%d,%d", &id, &x, &y) != EOF){
         /* populate the training set vector*/
         dataset[input_idx][0] = id;
         dataset[input_idx][1] = x;
@@ -393,6 +400,7 @@ void get_input_dataset(){
         if(input_idx==1000) break;
         input_idx++;
     }
+    fclose(fp);
     dataset_len = input_idx;
     chromosome_size  = dataset_len;
     min = 1;
@@ -405,7 +413,7 @@ int main(int argc, char* argv[]){
     printf("\n\nSimulation for GAs started...\n\n");
     struct population *p = (struct population*)calloc(1, sizeof(struct population));
     struct population *newp = (struct population*)calloc(1, sizeof(struct population));
-    get_input_dataset();
+    get_input_dataset(argv[1]);
     init_population(p, POPULATION_SIZE);
     init_population(newp, POPULATION_SIZE);
     /* init from the input dataset */
