@@ -174,18 +174,18 @@ void evaluate_population(struct population *p)
 /* select the best (fittest) chromosome in the population */
 void select_best(struct population *p)
 {
-    double min = DBL_MAX;
+  // double min = DBL_MAX;
+    double maxFitness = 0;
     p->best_chromosome_idx = 0;
 
     for(int i=0; i<p->size; ++i){
         /* the last entry in the population is the best chromosome */
-        if (p->c[i].fitness < min){
-            min = p->c[i].fitness;
+        if (maxFitness < p->c[i].fitness){
+            maxFitness = p->c[i].fitness;
             p->best_chromosome_idx = i;
-            p->c[POPULATION_SIZE].fitness = p->c[i].fitness;
-
         }
     }
+    p->c[POPULATION_SIZE].fitness = maxFitness;
 
     /* found the fittest then copy the genes */
     for(int i=0;i<p->c[p->best_chromosome_idx].csize;++i){
