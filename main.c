@@ -300,7 +300,7 @@ void apply_crossover(struct population *p)
             cnt++;
             if(cnt%2==0){
                 for(int j=0;j<p->c[i].csize;++j){
-                    double tmpid, tmpx, tmpy;
+                    int tmpid, tmpx, tmpy;
                     tmpid = p1->genes[j].id;
                     tmpx = p1->genes[j].x;
                     tmpy = p1->genes[j].y;
