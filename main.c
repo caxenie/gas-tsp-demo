@@ -206,30 +206,21 @@ void apply_elitism(struct population *p)
     int best_idx = 0, worst_idx = 0;
     init_chromosome(best, chromosome_size);
     init_chromosome(worst, chromosome_size);
-    best->fitness = p->c[0].fitness;
-    worst->fitness = p->c[0].fitness;
+    best->fitness = 0;
+    worst->fitness = 1;
 
-    for(int i=0;i< p->size-1;++i){
-        if(p->c[i].fitness < p->c[i+1].fitness){
-            if(p->c[i].fitness <= best->fitness){
-                best->fitness = p->c[i].fitness;
-                best_idx = i;
-            }
-            if(p->c[i+1].fitness >= worst->fitness){
-                worst->fitness = p->c[i+1].fitness;
-                worst_idx = i+1;
-            }
-        }
-        else{
-            if(p->c[i].fitness >= worst->fitness){
-                worst->fitness = p->c[i].fitness;
-                worst_idx = i;
-            }
-            if(p->c[i+1].fitness <= best->fitness){
-                best->fitness = p->c[i+1].fitness;
-                best_idx = i+1;
-            }
-        }
+    for (int i = 0; i < p->size; i++)
+    {
+	    if (best->fitness < p->c[i].fitness)
+	    {
+		    best->fitness = p->c[i].fitness;
+		    best_idx = i;
+	    }
+	    else if (p->c[i].fitness < worst->fitness)//worst始终比best小
+	    {
+		    worst->fitness = p->c[i].fitness;
+		    worst_idx = i;
+	    }
     }
     /* if best chromosome from the new population is better than */
     /* the best chromosome from the previous population, then    */
