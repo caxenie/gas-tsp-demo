@@ -104,7 +104,6 @@ int* shuffle_chromosome(int *data, int n)
 /* initialize a chromosome */
 void init_chromosome(struct chromosome *c, int s){
     int *genes_ids = (int*)calloc(s, sizeof(int));
-    int *shuffled_genes = (int*)calloc(s, sizeof(int));
     struct gene* gene_data = (struct gene*)calloc(s, sizeof(struct gene));
 
     for(int i=0;i<s;++i){
@@ -125,7 +124,7 @@ void init_chromosome(struct chromosome *c, int s){
         gene_data[i].y = c->genes[i].y;
     }
 
-    shuffled_genes = shuffle_chromosome(genes_ids, s);
+     int* shuffled_genes = shuffle_chromosome(genes_ids, s);
 
     for(int i=0;i<c->csize;i++){
         /* ensure that although we are shuffling ids we keep the correct coord values in */
@@ -138,6 +137,9 @@ void init_chromosome(struct chromosome *c, int s){
     c->fitness = 0.0f;
     c->rfitness = 0.0f;
     c->cfitness = 0.0f;
+    free(genes_ids);
+    free(shuffled_genes);
+    free(gene_data);
 }
 
 /* initialize a chromosomes population with given parameters */
