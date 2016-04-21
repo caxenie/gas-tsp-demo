@@ -243,6 +243,8 @@ void apply_elitism(struct population *p)
         }
         p->c[worst_idx].fitness = p->c[POPULATION_SIZE].fitness;
     }
+    free(best);
+    free(worst);
 }
 
 /* selection function using the elitist model in which only the
