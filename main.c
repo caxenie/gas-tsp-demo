@@ -129,8 +129,8 @@ void init_chromosome(struct chromosome *c, int s){
     for(int i=0;i<c->csize;i++){
         /* ensure that although we are shuffling ids we keep the correct coord values in */
         c->genes[i].id = shuffled_genes[i];
-        c->genes[i].x = gene_data[shuffled_genes[i]-1].x;
-        c->genes[i].y = gene_data[shuffled_genes[i]-1].y;
+        c->genes[i].x = gene_data[shuffled_genes[i]].x;
+        c->genes[i].y = gene_data[shuffled_genes[i]].y;
     }
 
     /* init fitness value */
