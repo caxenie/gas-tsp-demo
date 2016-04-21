@@ -155,11 +155,12 @@ void init_population(struct population *p, int psize){
 
 /* computes the fitness of a chromosome in the population */
 double compute_fitness(struct chromosome *c){
-    double fitness_val = 0.0f;
+    double distanceQuadraticSum = 0.0f;
     for(int i=0;i<c->csize-1;++i){
-        fitness_val += (pow(c->genes[i].x - c->genes[i+1].x, 2) + pow(c->genes[i].y - c->genes[i+1].y, 2));
+        distanceQuadraticSum += (pow(c->genes[i].x - c->genes[i+1].x, 2) + pow(c->genes[i].y - c->genes[i+1].y, 2));
     }
-    return sqrt(fitness_val);
+    double fitness_val = 1.0/ sqrt(distanceQuadraticSum);
+    return fitness_val;
 }
 
 /* evaluate function, takes a user defined function and computes it for every chromosome */
