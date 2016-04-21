@@ -271,15 +271,12 @@ void apply_selection(struct population *p, struct population *newp)
     /* select the survivors using the cumulative fitness */
     for(int i=0;i<p->size;++i){
         prob = rand()%1000/1000.0;
-        if(prob > p->c[0].cfitness)
-            newp->c[i] = p->c[0];
-        else
-        {
-            for(int j=0; j<p->size; ++j){
-                if(prob<=p->c[j].cfitness && prob>p->c[j+1].cfitness)
-                    newp->c[i] = p->c[j+1];
-            }
-        }
+	for (int j = 0; j<p->size; ++j) {
+	    if (prob <= p->c[j].cfitness) {//判断条件有问题，c[j].cfitness是递增的
+		newp->c[i] = p->c[j];
+		break;
+	    }
+	}
     }
     /* one the new population is created copy it back in the working var */
     for(int i=0 ;i<p->size; ++i)
