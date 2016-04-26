@@ -402,7 +402,6 @@ void get_input_dataset(char *  filename) {
 
 /* entry point */
 int main(int argc, char* argv[]){
-   argv[1] = "./data-sets/testInput23A.txt";
     srand(time(NULL));
     printf("\n\nSimulation for GAs started...\n\n");
     struct population *p = (struct population*)calloc(1, sizeof(struct population));
