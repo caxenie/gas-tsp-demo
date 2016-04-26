@@ -314,11 +314,11 @@ void apply_crossover(struct population *p)
                     p->c[i].genes[j].y = tmpy;
                 }
             }
+	    else {
+                p1 = &p->c[i];
+            }
         }
-        else
-        {
-            p1 = &p->c[i];
-        }
+
     }
 }
 /* function to swap 2 genes in the chromosome */
