@@ -293,7 +293,6 @@ void apply_crossover(struct population *p)
     double prob_xover = 0.0f;
     /* the two parent containers init */
     struct chromosome *p1 = NULL;
-    init_chromosome(p1, chromosome_size);
     /* crossover loop */
     for(int i=0; i< p->size; ++i){
         prob_xover = rand()%1000/1000.0;
