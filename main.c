@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <string.h>
 #include <time.h>
 #include <float.h>
 
@@ -216,7 +217,7 @@ void apply_elitism(struct population *p)
 		    best->fitness = p->c[i].fitness;
 		    best_idx = i;
 	    }
-	    else if (p->c[i].fitness < worst->fitness)//worst始终比best小
+	    else if (p->c[i].fitness < worst->fitness)
 	    {
 		    worst->fitness = p->c[i].fitness;
 		    worst_idx = i;
@@ -402,6 +403,7 @@ void get_input_dataset(char *  filename) {
 
 /* entry point */
 int main(int argc, char* argv[]){
+   argv[1] = "./data-sets/testInput23A.txt";
     srand(time(NULL));
     printf("\n\nSimulation for GAs started...\n\n");
     struct population *p = (struct population*)calloc(1, sizeof(struct population));
