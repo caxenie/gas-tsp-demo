@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <errno.h>
+#include <string.h>
 #include <time.h>
 #include <float.h>
 
@@ -84,7 +86,7 @@ int* shuffle_chromosome(int *data, int n)
     int* ret = (int*)calloc(n, sizeof(int));
     if (n > 1) {
         for (int i = 0; i < n - 1; i++) {
-            int j = i + (rand() + rand_seed) / (RAND_MAX / (n - i) + 1);
+            int j = i + 1 + (rand() + rand_seed) % (n - i - 1);
             int t = data[j];
             data[j] = data[i];
             data[i] = t;
@@ -103,7 +105,6 @@ int* shuffle_chromosome(int *data, int n)
 /* initialize a chromosome */
 void init_chromosome(struct chromosome *c, int s){
     int *genes_ids = (int*)calloc(s, sizeof(int));
-    int *shuffled_genes = (int*)calloc(s, sizeof(int));
     struct gene* gene_data = (struct gene*)calloc(s, sizeof(struct gene));
 
     for(int i=0;i<s;++i){
@@ -124,19 +125,22 @@ void init_chromosome(struct chromosome *c, int s){
         gene_data[i].y = c->genes[i].y;
     }
 
-    shuffled_genes = shuffle_chromosome(genes_ids, s);
+     int* shuffled_genes = shuffle_chromosome(genes_ids, s);
 
     for(int i=0;i<c->csize;i++){
         /* ensure that although we are shuffling ids we keep the correct coord values in */
         c->genes[i].id = shuffled_genes[i];
-        c->genes[i].x = gene_data[shuffled_genes[i]-1].x;
-        c->genes[i].y = gene_data[shuffled_genes[i]-1].y;
+        c->genes[i].x = gene_data[shuffled_genes[i]].x;
+        c->genes[i].y = gene_data[shuffled_genes[i]].y;
     }
 
     /* init fitness value */
     c->fitness = 0.0f;
     c->rfitness = 0.0f;
     c->cfitness = 0.0f;
+    free(genes_ids);
+    free(shuffled_genes);
+    free(gene_data);
 }
 
 /* initialize a chromosomes population with given parameters */
@@ -152,11 +156,12 @@ void init_population(struct population *p, int psize){
 
 /* computes the fitness of a chromosome in the population */
 double compute_fitness(struct chromosome *c){
-    double fitness_val = 0.0f;
+    double distanceQuadraticSum = 0.0f;
     for(int i=0;i<c->csize-1;++i){
-        fitness_val += (pow(c->genes[i].x - c->genes[i+1].x, 2) + pow(c->genes[i].y - c->genes[i+1].y, 2));
+        distanceQuadraticSum += (pow(c->genes[i].x - c->genes[i+1].x, 2) + pow(c->genes[i].y - c->genes[i+1].y, 2));
     }
-    return sqrt(fitness_val);
+    double fitness_val = 1.0/ sqrt(distanceQuadraticSum);
+    return fitness_val;
 }
 
 /* evaluate function, takes a user defined function and computes it for every chromosome */
@@ -170,18 +175,18 @@ void evaluate_population(struct population *p)
 /* select the best (fittest) chromosome in the population */
 void select_best(struct population *p)
 {
-    double min = DBL_MAX;
+  // double min = DBL_MAX;
+    double maxFitness = 0;
     p->best_chromosome_idx = 0;
 
     for(int i=0; i<p->size; ++i){
         /* the last entry in the population is the best chromosome */
-        if (p->c[i].fitness < min){
-            min = p->c[i].fitness;
+        if (maxFitness < p->c[i].fitness){
+            maxFitness = p->c[i].fitness;
             p->best_chromosome_idx = i;
-            p->c[POPULATION_SIZE].fitness = p->c[i].fitness;
-
         }
     }
+    p->c[POPULATION_SIZE].fitness = maxFitness;
 
     /* found the fittest then copy the genes */
     for(int i=0;i<p->c[p->best_chromosome_idx].csize;++i){
@@ -202,30 +207,21 @@ void apply_elitism(struct population *p)
     int best_idx = 0, worst_idx = 0;
     init_chromosome(best, chromosome_size);
     init_chromosome(worst, chromosome_size);
-    best->fitness = p->c[0].fitness;
-    worst->fitness = p->c[0].fitness;
+    best->fitness = 0;
+    worst->fitness = 1;
 
-    for(int i=0;i< p->size-1;++i){
-        if(p->c[i].fitness < p->c[i+1].fitness){
-            if(p->c[i].fitness <= best->fitness){
-                best->fitness = p->c[i].fitness;
-                best_idx = i;
-            }
-            if(p->c[i+1].fitness >= worst->fitness){
-                worst->fitness = p->c[i+1].fitness;
-                worst_idx = i+1;
-            }
-        }
-        else{
-            if(p->c[i].fitness >= worst->fitness){
-                worst->fitness = p->c[i].fitness;
-                worst_idx = i;
-            }
-            if(p->c[i+1].fitness <= best->fitness){
-                best->fitness = p->c[i+1].fitness;
-                best_idx = i+1;
-            }
-        }
+    for (int i = 0; i < p->size; i++)
+    {
+	    if (best->fitness < p->c[i].fitness)
+	    {
+		    best->fitness = p->c[i].fitness;
+		    best_idx = i;
+	    }
+	    else if (p->c[i].fitness < worst->fitness)
+	    {
+		    worst->fitness = p->c[i].fitness;
+		    worst_idx = i;
+	    }
     }
     /* if best chromosome from the new population is better than */
     /* the best chromosome from the previous population, then    */
@@ -248,6 +244,8 @@ void apply_elitism(struct population *p)
         }
         p->c[worst_idx].fitness = p->c[POPULATION_SIZE].fitness;
     }
+    free(best);
+    free(worst);
 }
 
 /* selection function using the elitist model in which only the
@@ -274,15 +272,12 @@ void apply_selection(struct population *p, struct population *newp)
     /* select the survivors using the cumulative fitness */
     for(int i=0;i<p->size;++i){
         prob = rand()%1000/1000.0;
-        if(prob > p->c[0].cfitness)
-            newp->c[i] = p->c[0];
-        else
-        {
-            for(int j=0; j<p->size; ++j){
-                if(prob<=p->c[j].cfitness && prob>p->c[j+1].cfitness)
-                    newp->c[i] = p->c[j+1];
-            }
-        }
+	for (int j = 0; j<p->size; ++j) {
+	    if (prob <= p->c[j].cfitness) {//判断条件有问题，c[j].cfitness是递增的
+		newp->c[i] = p->c[j];
+		break;
+	    }
+	}
     }
     /* one the new population is created copy it back in the working var */
     for(int i=0 ;i<p->size; ++i)
@@ -297,8 +292,7 @@ void apply_crossover(struct population *p)
     /* probability to xover */
     double prob_xover = 0.0f;
     /* the two parent containers init */
-    struct chromosome *p1 = (struct chromosome*)calloc(1, sizeof(struct chromosome));
-    init_chromosome(p1, chromosome_size);
+    struct chromosome *p1 = NULL;
     /* crossover loop */
     for(int i=0; i< p->size; ++i){
         prob_xover = rand()%1000/1000.0;
@@ -306,7 +300,7 @@ void apply_crossover(struct population *p)
             cnt++;
             if(cnt%2==0){
                 for(int j=0;j<p->c[i].csize;++j){
-                    double tmpid, tmpx, tmpy;
+                    int tmpid, tmpx, tmpy;
                     tmpid = p1->genes[j].id;
                     tmpx = p1->genes[j].x;
                     tmpy = p1->genes[j].y;
@@ -320,11 +314,11 @@ void apply_crossover(struct population *p)
                     p->c[i].genes[j].y = tmpy;
                 }
             }
+	    else {
+                p1 = &p->c[i];
+            }
         }
-        else
-        {
-            p1 = &p->c[i];
-        }
+
     }
 }
 /* function to swap 2 genes in the chromosome */
@@ -375,7 +369,13 @@ void report_state(struct population *p)
 }
 
 /* get the input data and store it locally for the population initialization */
-void get_input_dataset(){
+void get_input_dataset(char *  filename) {
+     FILE *fp = fopen(filename, "r");
+     if (fp == NULL){
+          printf("Fail to open file %s, %s.\n", filename, strerror(errno));
+          return;
+     }
+    printf("Open file %s OK.\n", filename);
     int id = 0, x = 0, y = 0;
     int input_idx = 0;
 
@@ -384,7 +384,7 @@ void get_input_dataset(){
         dataset[i] = (int *)calloc(3, sizeof(int));
     }
     /* loop and get training data */
-    while(scanf("%d,%d,%d\n", &id, &x, &y)>0){
+    while (fscanf(fp,"%d,%d,%d", &id, &x, &y) != EOF){
         /* populate the training set vector*/
         dataset[input_idx][0] = id;
         dataset[input_idx][1] = x;
@@ -393,6 +393,7 @@ void get_input_dataset(){
         if(input_idx==1000) break;
         input_idx++;
     }
+    fclose(fp);
     dataset_len = input_idx;
     chromosome_size  = dataset_len;
     min = 1;
@@ -405,7 +406,7 @@ int main(int argc, char* argv[]){
     printf("\n\nSimulation for GAs started...\n\n");
     struct population *p = (struct population*)calloc(1, sizeof(struct population));
     struct population *newp = (struct population*)calloc(1, sizeof(struct population));
-    get_input_dataset();
+    get_input_dataset(argv[1]);
     init_population(p, POPULATION_SIZE);
     init_population(newp, POPULATION_SIZE);
     /* init from the input dataset */
@@ -430,6 +431,9 @@ int main(int argc, char* argv[]){
 
     printf("\n Best fitness: %lf\n\n", p->c[POPULATION_SIZE].fitness);
     printf("\nSimulation ended.\n\n");
+    free(p);
+    free(newp);
+    free(dataset);
     return EXIT_SUCCESS;
 }
 
